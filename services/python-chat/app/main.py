@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from .messages import pick_reply
 
 app = FastAPI(title="python-chat", version="1.0.0")
+POD_NAME = os.getenv("POD_NAME", "local")
 
 class ReplyRequest(BaseModel):
     from_: str | None = None  # we'll map "from" manually
@@ -37,6 +38,7 @@ async def reply(request: Request):
         "trace_id": trace_id,
         "message_len": len(msg),
         "reply": r,
+        "pod": POD_NAME,
     })
 
-    return {"from": "python-chat", "reply": r, "trace_id": trace_id}
+    return {"from": "python-chat", "reply": r, "trace_id": trace_id, "pod": POD_NAME}
