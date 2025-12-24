@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-chat
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: go-chat
+  template:
+    metadata:
+      labels:
+        app: go-chat
+    spec:
+      containers:
+        - name: go-chat
+          image: go-chat:0.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+
+          env:
+            - name: PYTHON_CHAT_URL
+              value: "http://python-chat/reply"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 5
+
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: go-chat
+spec:
+  selector:
+    app: go-chat
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
